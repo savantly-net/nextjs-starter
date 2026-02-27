@@ -115,6 +115,38 @@ export function Button({ variant, children }: ButtonProps) {
 - Use same codebase and config as app
 - Scripts in `scripts/` directory
 
+## SOLID Principles
+
+### Single Responsibility (SRP)
+- Each module, component, and function should have one reason to change
+- Components handle rendering; extract business logic into hooks or utility functions
+- API route handlers delegate to service functions rather than containing logic inline
+- Split components that manage both data fetching and complex UI into container/presentational pairs
+
+### Open/Closed (OCP)
+- Design components and modules to be extended without modifying existing code
+- Use composition and props (e.g., `children`, render props, slots) to extend component behavior
+- Prefer configuration objects and strategy patterns over switch/if-else chains
+- Use TypeScript discriminated unions to add new variants without changing existing handlers
+
+### Liskov Substitution (LSP)
+- Components sharing an interface must be interchangeable without breaking behavior
+- If a component accepts `ButtonProps`, any component conforming to that interface must work as a drop-in replacement
+- Avoid narrowing inherited prop types or adding preconditions that the parent type doesn't require
+- Custom hooks returning the same shape should be swappable (e.g., `useLocalStorage` vs `useSessionStorage`)
+
+### Interface Segregation (ISP)
+- Keep prop interfaces small and focused — don't force consumers to provide unused props
+- Split large interfaces into composable, smaller ones (e.g., `Clickable`, `Stylable`, `Loadable`)
+- Prefer multiple specific hooks over one monolithic hook that returns everything
+- API response types should only include fields the consumer actually needs
+
+### Dependency Inversion (DIP)
+- Depend on abstractions (interfaces/types), not concrete implementations
+- Inject dependencies via props, context, or function parameters rather than importing concrete modules directly
+- Data-fetching functions should accept a client/fetcher interface, not hardcode `fetch` or a specific SDK
+- Use TypeScript interfaces to define service contracts; swap implementations per environment via config
+
 ## Code Style
 
 ### TypeScript
