@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { PageShell } from "@/components/layout/page-shell";
+import { ExternalScripts } from "@/components/ui/external-scripts";
+import { buildMetadata } from "@/lib/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,10 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Next.js Starter",
-  description: "A Next.js starter template with shadcn/ui",
-};
+export const metadata: Metadata = buildMetadata();
 
 export default function RootLayout({
   children,
@@ -27,7 +27,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <PageShell>{children}</PageShell>
+        <ExternalScripts />
       </body>
     </html>
   );

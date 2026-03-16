@@ -9,7 +9,7 @@ import {
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Next.js Starter</CardTitle>

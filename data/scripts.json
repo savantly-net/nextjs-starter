@@ -1,0 +1,8 @@
+[
+  {
+    "id": "example-analytics",
+    "src": "https://example.com/analytics.js",
+    "strategy": "afterInteractive",
+    "urlPatterns": []
+  }
+]
