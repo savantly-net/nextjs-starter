@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "title": "Home",
+      "href": "/"
+    },
+    {
+      "title": "About",
+      "href": "/about",
+      "children": [
+        { "title": "Team", "href": "/about/team" },
+        { "title": "Contact", "href": "/about/contact" }
+      ]
+    }
+  ]
+}
