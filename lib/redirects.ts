@@ -22,6 +22,7 @@ export function matchRedirect(
       for (let i = 1; i < match.length; i++) {
         destination = destination.replace(`$${i}`, match[i] ?? "");
       }
+      destination = destination.replace(/\/\/+/g, '/');
       return { destination, permanent: rule.permanent };
     }
   }
