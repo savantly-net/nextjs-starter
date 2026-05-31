@@ -1,0 +1,98 @@
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly sweep so newly-disclosed CVEs surface even without a push.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1. Known CVEs in dependencies ------------------------------------------
+  dependency-audit:
+    name: Dependency audit (pnpm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Audit production dependencies (blocking)
+        # Blocking gate scoped to what actually ships. Production deps carry no
+        # high/critical advisories today, so any new one fails the build.
+        # Dev-tooling CVEs (eslint/vite/shadcn transitives) are reported in the
+        # next step but don't block — they never reach the runtime bundle.
+        # pnpm audit reads the lockfile + manifest; no install needed.
+        run: pnpm audit --prod --audit-level=high
+      - name: Audit full dependency tree (report-only)
+        # Visibility into the dev-tooling backlog without gating. Dependabot
+        # opens remediation PRs as upstream fixes land. Promote a finding to the
+        # blocking step above if it ever reaches a production dependency.
+        if: always()
+        run: pnpm audit || true
+
+  # 2. SAST — dangerous code patterns --------------------------------------
+  semgrep:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Semgrep
+        run: pip install --quiet semgrep
+      - name: Semgrep scan
+        # Blocking gate: `--error` makes findings fail the job. The SARIF upload
+        # below also surfaces them in the Security tab (needs GitHub Advanced
+        # Security on private repos).
+        run: |
+          semgrep scan \
+            --config p/javascript \
+            --config p/typescript \
+            --config p/react \
+            --config p/nodejs \
+            --config p/secrets \
+            --config p/owasp-top-ten \
+            --error \
+            --sarif --output semgrep.sarif
+      - name: Upload SARIF to code scanning
+        if: always()
+        # Requires GitHub Advanced Security on private repos; tolerate its
+        # absence so the --error gate above is still what blocks the PR.
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+  # 3. Committed secrets (working tree + full history) ---------------------
+  secret-scan:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.18.4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so secrets in old commits are caught
+      - name: Install Gitleaks
+        run: |
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+      - name: Run Gitleaks
+        run: gitleaks detect --source . --redact --exit-code 1 --config .gitleaks.toml

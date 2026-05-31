@@ -1,0 +1,7 @@
+pnpm lint-staged
+
+# Secret scan on staged changes. No-op if gitleaks isn't installed locally
+# (CI enforces it regardless). Bypass intentionally with: git commit --no-verify
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config .gitleaks.toml
+fi

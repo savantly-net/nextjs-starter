@@ -1,0 +1,13 @@
+title = "nextjs-starter gitleaks config"
+
+# Build on gitleaks' built-in rule set rather than replacing it.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Paths and placeholder values that are safe by design"
+paths = [
+  '''\.env.*\.example$''',     # documented placeholders, not real keys
+  '''(^|/)pnpm-lock\.yaml$''', # hashes/integrity strings, not secrets
+  '''(^|/)package-lock\.json$''',
+]
