@@ -11,10 +11,10 @@ version: 1
 sandbox:
   # Uses the pipeline's typescript-nextjs default base image (node:22) —
   # no override needed.
-  install_cmd: "npm install --no-audit --no-fund"
+  install_cmd: "pnpm install --frozen-lockfile"
 
 test:
-  cmd: "npm test"
+  cmd: "pnpm test"
   timeout_ms: 300000
   # Story 2.5 no-test-harness probe — exits 0 iff package.json's scripts.test
   # is a non-empty string. Refuses the ticket with `no_test_harness` before
@@ -23,13 +23,13 @@ test:
 
 gates:
   lint:
-    presence_cmd: "npx --no-install eslint --version >/dev/null 2>&1"
+    presence_cmd: "pnpm exec eslint --version >/dev/null 2>&1"
     config_glob: ".eslintrc* eslint.config.*"
     # Must invoke the `eslint` binary as a word — anti-gaming guard
     # (ADR-013 §Decision §4). The pipeline's eslint-json parser reads this
     # output.
-    run_cmd: "npx --no-install eslint . -f json --ext .js,.jsx,.ts,.tsx 2>/dev/null || true"
+    run_cmd: "pnpm exec eslint . -f json --ext .js,.jsx,.ts,.tsx 2>/dev/null || true"
   typecheck:
-    presence_cmd: "npx --no-install tsc --version >/dev/null 2>&1"
+    presence_cmd: "pnpm exec tsc --version >/dev/null 2>&1"
     # Must invoke `tsc` as a word — same anti-gaming guard as lint.
-    run_cmd: "npx --no-install tsc --noEmit --pretty false"
+    run_cmd: "pnpm exec tsc --noEmit --pretty false"
