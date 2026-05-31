@@ -1,0 +1,10 @@
+# Generated / vendored / non-source — nothing to scan here.
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+public/
+*.min.js
+pnpm-lock.yaml

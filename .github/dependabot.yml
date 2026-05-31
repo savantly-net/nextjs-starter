@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # npm ecosystem covers pnpm (Dependabot reads package.json + pnpm-lock.yaml).
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Batch low-risk updates into one PR to cut review noise; security
+      # patches still open individually and immediately.
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Keep the Actions in security.yml (and any future workflows) patched.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
