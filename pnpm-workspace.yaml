@@ -1,0 +1,27 @@
+# pnpm 11+ relocated package-manager settings out of package.json's `pnpm`
+# field into this file (canonical home, even for single-package repos).
+# See https://pnpm.io/settings — the previous package.json `pnpm` block is
+# silently ignored at runtime, which breaks `pnpm install --frozen-lockfile`
+# because the lockfile is generated WITH those settings applied but the
+# install no longer reads them, producing ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+
+# Per-package decisions on running install/postinstall lifecycle scripts.
+# pnpm 11 renamed `onlyBuiltDependencies` (an allow-list) to `allowBuilds`
+# (an explicit allow/deny map). Keep the same posture as the prior config:
+#   - `sharp` + `unrs-resolver` need their postinstall to compile native
+#     binaries used at runtime/build time; without them next.js image
+#     optimisation and the resolver crash on first use.
+#   - `esbuild` + `msw` are added to the lockfile's build-decision set by
+#     pnpm 11 itself; previously they weren't on the allow-list, so keep
+#     them denied to preserve the supply-chain footprint.
+allowBuilds:
+  esbuild: false
+  msw: false
+  sharp: true
+  unrs-resolver: true
+
+# Security pin: force `tmp >= 0.2.4` everywhere in the graph to clear the
+# pre-0.2.4 CVE on `tmp` (arbitrary write via symlink). Re-evaluate once
+# transitive deps upgrade past the floor on their own.
+overrides:
+  'tmp@<0.2.4': '>=0.2.4'
