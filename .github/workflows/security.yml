@@ -21,7 +21,7 @@ jobs:
     name: Dependency audit (pnpm)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
         # Version comes from package.json "packageManager" — keeps CI on the
         # same pnpm major as the repo. pnpm-workspace.yaml carries pnpm 11+
@@ -52,7 +52,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -88,7 +88,7 @@ jobs:
     env:
       GITLEAKS_VERSION: 8.18.4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # full history so secrets in old commits are caught
       - name: Install Gitleaks
