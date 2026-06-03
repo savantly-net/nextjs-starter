@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         # Version comes from package.json "packageManager" — keeps CI on the
         # same pnpm major as the repo. pnpm-workspace.yaml carries pnpm 11+
         # settings (overrides/allowBuilds); pnpm 9 would misread it as a
