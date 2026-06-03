@@ -27,7 +27,7 @@ jobs:
         # same pnpm major as the repo. pnpm-workspace.yaml carries pnpm 11+
         # settings (overrides/allowBuilds); pnpm 9 would misread it as a
         # workspace and fail audit with "packages field missing or empty".
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Audit production dependencies (blocking)
