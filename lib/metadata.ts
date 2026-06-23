@@ -9,14 +9,14 @@ const site = siteConfig as SiteConfig;
  */
 export function buildMetadata(page?: PageMeta): Metadata {
   const title = page?.title ? `${page.title} | ${site.name}` : site.name;
-  const description = page?.description ?? site.description;
+  const description = page?.description;
 
   return {
     title,
-    description,
+    ...(description && { description }),
     openGraph: {
       title,
-      description,
+      ...(description && { description }),
       url: site.url,
       siteName: site.name,
       locale: site.locale,
