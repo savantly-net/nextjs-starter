@@ -33,11 +33,15 @@ export function getBreadcrumbs(pathname: string): NavItem[] {
   return trail;
 }
 
+function isPathPrefix(pathname: string, href: string): boolean {
+  return pathname === href || (pathname.startsWith(href) && pathname[href.length] === "/");
+}
+
 /**
  * Check whether `pathname` is within the subtree rooted at `item`.
  * Useful for highlighting active nav sections.
  */
 export function isNavItemActive(item: NavItem, pathname: string): boolean {
-  if (item.href === pathname) return true;
+  if (isPathPrefix(pathname, item.href)) return true;
   return item.children?.some((child) => isNavItemActive(child, pathname)) ?? false;
 }
