@@ -20,7 +20,7 @@ export function matchRedirect(
       // Replace capture group placeholders ($1, $2, ...) in destination
       let destination = rule.destination;
       for (let i = 1; i < match.length; i++) {
-        destination = destination.replace(`$${i}`, match[i] ?? "");
+        destination = destination.replaceAll(`$${i}`, match[i] ?? "");
       }
       return { destination, permanent: rule.permanent };
     }
