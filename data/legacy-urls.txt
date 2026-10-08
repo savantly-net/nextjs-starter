@@ -1,0 +1,4 @@
+# Every URL the previous site exposed, one pathname per line.
+# Sources: its sitemap(s), a crawl, and a Search Console "Pages" export.
+# `pnpm check:url-parity` verifies each resolves here in at most one redirect.
+# Empty for a site with no predecessor.

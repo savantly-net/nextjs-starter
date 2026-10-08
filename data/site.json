@@ -3,6 +3,10 @@
   "description": "A Next.js starter template with shadcn/ui",
   "url": "https://example.com",
   "locale": "en-US",
+  "trailingSlash": false,
+  "titleTemplate": "%s | Next.js Starter",
+  "verification": {},
+  "organization": {},
   "socialLinks": [],
   "copyright": "All rights reserved."
 }
