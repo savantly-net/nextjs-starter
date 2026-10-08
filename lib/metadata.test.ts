@@ -53,6 +53,7 @@ describe("buildMetadata", () => {
     expect(metadata.title).toBe("About | Example");
     expect(metadata.description).toBe("New");
     expect(buildMetadata({ title: "Raw", rawTitle: true }).title).toBe("Raw");
+    expect(buildMetadata({ title: "Save $& now" }).title).toBe("Save $& now | Example");
   });
 
   it("keeps a legacy page without a description without one", () => {

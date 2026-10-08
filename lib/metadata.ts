@@ -7,7 +7,7 @@ import { absoluteUrl, getSiteUrl, isIndexable } from "@/lib/site-url";
 const site = siteConfig as SiteConfig;
 
 function applyTemplate(title: string): string {
-  return (site.titleTemplate ?? "%s").replace("%s", title);
+  return (site.titleTemplate ?? "%s").replace("%s", () => title);
 }
 
 /**

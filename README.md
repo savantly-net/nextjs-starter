@@ -90,7 +90,7 @@ scripts go in `data/scripts.json`, which ships empty.
 
 ## Redirects
 
-URL redirects are defined in `data/redirects.json` and processed by the Next.js proxy on every request, before trailing-slash normalisation, so an old URL reaches its destination in one hop. Sources are regexes matched against the pathname without its trailing slash, including file paths such as `/sitemap_index.xml`. Destinations support capture groups:
+URL redirects are defined in `data/redirects.json` and processed by the Next.js proxy on every request, before trailing-slash normalisation, so an old URL reaches its destination in one hop. Sources are regexes matched against the pathname without its trailing slash. The proxy skips paths with a dot, so a rule for a file path (`/sitemap_index.xml`, `/wp-content/uploads/…`) also needs that path in the `legacy file matchers` block of `proxy.ts`. Destinations support capture groups:
 
 ```json
 [

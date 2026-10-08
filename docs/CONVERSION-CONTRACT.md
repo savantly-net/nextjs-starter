@@ -78,9 +78,15 @@ interface RedirectRule {
 ```
 
 `proxy.ts` applies rules **before** trailing-slash normalisation, so every legacy URL
-resolves in one hop. The proxy runs on every path except `/_next/static`,
-`/_next/image` and `/favicon.ico`, so file paths (`/sitemap_index.xml`, `/old.html`,
-`/wp-content/uploads/…`) can be redirected too. Query strings are not matched.
+resolves in one hop. Query strings are not matched.
+
+**File paths need a matcher.** The proxy skips any path with a dot, so images and
+other static files don't each cost a proxy invocation (a billed middleware call on
+Vercel). A rule whose source is a file path (`/sitemap_index.xml`, `/old.html`,
+`/wp-content/uploads/…`) only fires once `proxy.ts#config.matcher` lists that path
+or prefix, in the block marked `legacy file matchers`. Add only what the site's
+rules need. Next.js reads the matcher at build time, so it must be literal strings,
+not data from `redirects.json`.
 
 ## Routes
 
@@ -121,7 +127,8 @@ pnpm check:seo-parity  --base=http://localhost:3100
 
 - `check:url-parity`: every listed URL → 200 in ≤ 1 hop. Exit 1 otherwise.
 - `check:seo-parity`: for every `legacy-seo.json` entry that doesn't redirect, the
-  served title, description, canonical, robots and og:image match. Offline: compares
-  against the JSON, never the origin. Exit 1 on any mismatch. Build the target as
+  page served at `--base` (the new site, which must be running) has the title,
+  description, canonical, robots and og:image recorded in the JSON. The JSON is the
+  baseline; the old origin is never fetched. Exit 1 on any mismatch. Build the target as
   production (`NEXT_PUBLIC_SITE_URL` = `site.json#url`) or robots won't match.
 - Both accept `--json` (JSON to stdout) or `--json=<file>`.

@@ -42,8 +42,12 @@ export function proxy(request: NextRequest): NextResponse | undefined {
 }
 
 export const config = {
-  // Everything except Next.js build output. Dotted paths are included on
-  // purpose: old URLs such as /page.html, /sitemap_index.xml or
-  // /wp-content/uploads/… may need redirects too.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    // Every page. Paths with a dot (files) are skipped, so static assets don't
+    // each cost a proxy invocation — a billed middleware call on Vercel.
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    // legacy file matchers: file paths that data/redirects.json redirects.
+    // Add only what this site needs; the matcher must be literal strings.
+    // e.g. "/sitemap_index.xml", "/:file(.*-sitemap\\.xml)", "/wp-content/:path*"
+  ],
 };

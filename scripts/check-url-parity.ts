@@ -16,7 +16,7 @@ import { arg, flag, mapWithConcurrency, readList, toPath } from "./lib/cli";
 const CONCURRENCY = 8;
 const MAX_HOPS = 10;
 
-type Verdict = "ok" | "redirect" | "chain" | "missing" | "broken" | "error";
+type Verdict = "ok" | "redirect" | "chain" | "unexpected" | "missing" | "broken" | "error";
 
 export interface UrlResult {
   source: string;
@@ -30,6 +30,7 @@ const LABEL: Record<Verdict, string> = {
   ok: "OK        served directly",
   redirect: "REDIRECT  one hop to another page",
   chain: "CHAIN     reaches a page in more than one hop",
+  unexpected: "UNEXPECTED final status is not 200 (e.g. 204, or a 3xx with no Location)",
   missing: "MISSING   4xx",
   broken: "BROKEN    5xx",
   error: "ERROR     request failed",
@@ -65,7 +66,9 @@ async function probe(base: string, source: string): Promise<UrlResult> {
       ? "broken"
       : status >= 400
         ? "missing"
-        : hops === 0
+        : status !== 200
+          ? "unexpected"
+          : hops === 0
           ? "ok"
           : hops === 1 && !samePage
             ? "redirect"
@@ -90,7 +93,7 @@ async function main(): Promise<void> {
   if (flag("json")) {
     console.log(JSON.stringify({ checked: results.length, failures, results }, null, 2));
   } else {
-    for (const verdict of ["missing", "broken", "chain", "error", "redirect", "ok"] as Verdict[]) {
+    for (const verdict of ["missing", "broken", "unexpected", "chain", "error", "redirect", "ok"] as Verdict[]) {
       const group = results.filter((result) => result.verdict === verdict);
       if (group.length === 0) continue;
       console.log(`\n── ${LABEL[verdict]} (${group.length})`);
