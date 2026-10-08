@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { WebPageStructuredData } from "@/components/seo/web-page-structured-data";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,8 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { buildMetadata } from "@/lib/metadata";
+
+export const metadata: Metadata = buildMetadata({ path: "/" });
+
 export default function Home() {
   return (
+    <>
+    <WebPageStructuredData path="/" name="Next.js Starter" />
     <div className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -30,5 +38,6 @@ export default function Home() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
