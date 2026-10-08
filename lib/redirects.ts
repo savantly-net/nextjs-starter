@@ -6,22 +6,39 @@ export interface RedirectMatch {
 }
 
 /**
- * Find the first redirect rule whose source regex matches the given pathname.
- * Returns the resolved destination (with capture group substitution) or null.
+ * Strip the trailing slash, so one rule matches both `/old` and `/old/`.
+ * Rules are written without it; destinations carry the site's convention.
  */
-export function matchRedirect(
-  pathname: string,
-  rules: RedirectRule[]
-): RedirectMatch | null {
+export function normalizePathname(pathname: string): string {
+  return pathname.length > 1 ? pathname.replace(/\/+$/, "") || "/" : pathname;
+}
+
+const compiled = new Map<string, RegExp>();
+
+function regexFor(source: string): RegExp {
+  let regex = compiled.get(source);
+  if (!regex) {
+    regex = new RegExp(source);
+    compiled.set(source, regex);
+  }
+  return regex;
+}
+
+/**
+ * Find the first redirect rule whose source regex matches the given pathname
+ * (trailing slash ignored). Returns the resolved destination, with `$1`, `$2`…
+ * replaced by capture groups, or null.
+ */
+export function matchRedirect(pathname: string, rules: RedirectRule[]): RedirectMatch | null {
+  const normalized = normalizePathname(pathname);
+
   for (const rule of rules) {
-    const regex = new RegExp(rule.source);
-    const match = pathname.match(regex);
+    const match = regexFor(rule.source).exec(normalized);
     if (match) {
-      // Replace capture group placeholders ($1, $2, ...) in destination
-      let destination = rule.destination;
-      for (let i = 1; i < match.length; i++) {
-        destination = destination.replace(`$${i}`, match[i] ?? "");
-      }
+      const destination = rule.destination.replace(
+        /\$(\d+)/g,
+        (_, index: string) => match[Number(index)] ?? ""
+      );
       return { destination, permanent: rule.permanent };
     }
   }

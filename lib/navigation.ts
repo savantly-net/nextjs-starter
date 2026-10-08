@@ -1,5 +1,6 @@
 import type { NavItem } from "@/types/site";
 import navigationData from "@/data/navigation.json";
+import { isSamePath } from "@/lib/site-url";
 
 /**
  * Returns the full navigation tree.
@@ -18,7 +19,7 @@ export function getBreadcrumbs(pathname: string): NavItem[] {
   function walk(items: NavItem[]): boolean {
     for (const item of items) {
       trail.push(item);
-      if (item.href === pathname) {
+      if (isSamePath(item.href, pathname)) {
         return true;
       }
       if (item.children && walk(item.children)) {
@@ -38,6 +39,6 @@ export function getBreadcrumbs(pathname: string): NavItem[] {
  * Useful for highlighting active nav sections.
  */
 export function isNavItemActive(item: NavItem, pathname: string): boolean {
-  if (item.href === pathname) return true;
+  if (isSamePath(item.href, pathname)) return true;
   return item.children?.some((child) => isNavItemActive(child, pathname)) ?? false;
 }

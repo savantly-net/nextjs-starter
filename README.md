@@ -36,14 +36,20 @@ components/
     raw-html.tsx  # HTML string renderer for legacy/CMS content
     responsive-image.tsx  # next/image wrapper with fill and sized modes
     external-scripts.tsx  # Loads third-party scripts by URL pattern
+  seo/            # JSON-LD: site graph, WebPage, Article, BreadcrumbList
+  analytics/      # GTM, GA4, Clarity, HubSpot, CallRail — each env-gated
   features/       # Feature-specific components
 data/             # JSON-driven site configuration
-  site.json       # Global site config (name, description, social links)
+  site.json       # Global site config (origin, trailing slashes, title template, verification)
+  legacy-seo.json # What a previous site published per URL (titles, descriptions, canonicals…)
+  legacy-urls.txt # Every URL a previous site exposed; checked by check:url-parity
   scripts.json    # Third-party scripts with URL pattern matching
   redirects.json  # URL redirect rules (regex-matched)
   navigation.json # Site hierarchy and navigation tree
 lib/              # Utility functions and shared logic
-  metadata.ts     # Next.js Metadata builder with site defaults
+  metadata.ts     # buildMetadata({ path }): canonical, robots, legacy SEO
+  site-url.ts     # Origin, default-deny indexing, trailing-slash-aware href()
+  routes.ts       # Indexable routes, for the sitemap
   scripts.ts      # Script filtering by URL regex patterns
   redirects.ts    # Redirect matching engine
   navigation.ts   # Navigation, breadcrumb, and active-state helpers
@@ -52,12 +58,39 @@ hooks/            # Custom React hooks
 types/
   site.ts         # All site-related types
 public/           # Static assets
-proxy.ts          # Next.js 16 proxy — processes redirects at the edge
+scripts/          # check:url-parity, check:seo-parity
+proxy.ts          # Next.js 16 proxy — redirects, then trailing-slash normalisation
 ```
+
+## SEO and indexing
+
+Read [docs/CONVERSION-CONTRACT.md](docs/CONVERSION-CONTRACT.md) before converting an existing site.
+
+- **Indexing is default-deny.** A deployment is indexable only when `NEXT_PUBLIC_SITE_URL`
+  equals `data/site.json#url`. Previews serve `Disallow: /` and `noindex` with no setup;
+  production must have `NEXT_PUBLIC_SITE_URL` set **at build time**.
+- **Every page calls `buildMetadata({ path })`.** `path` sets the canonical and `og:url`
+  and pulls in the previous site's SEO from `data/legacy-seo.json`.
+- **Unknown URLs 404.** Dynamic routes use `dynamicParams = false` and `notFound()`.
+- **Trailing slashes** follow `data/site.json#trailingSlash`; build internal links with `href()`.
+- `app/robots.ts` and `app/sitemap.ts` are generated; the sitemap lists `lib/routes.ts#getAllRoutes`.
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://www.example.com pnpm build && PORT=3100 pnpm start
+pnpm check:url-parity --base=http://localhost:3100   # every legacy URL → 200 in ≤ 1 hop
+pnpm check:seo-parity --base=http://localhost:3100   # titles, descriptions, canonicals, robots
+```
+
+## Analytics
+
+Each tag renders only when its variable is set (see `.env.example`); set them on
+production only. `NEXT_PUBLIC_GTM_IDS`, `NEXT_PUBLIC_GA4_ID`, `NEXT_PUBLIC_CLARITY_ID`,
+`NEXT_PUBLIC_HUBSPOT_PORTAL_ID`, `NEXT_PUBLIC_CALLRAIL_SCRIPT_URL`. Other third-party
+scripts go in `data/scripts.json`, which ships empty.
 
 ## Redirects
 
-URL redirects are defined in `data/redirects.json` and processed by the Next.js proxy on every request. Rules use regex patterns with capture group support:
+URL redirects are defined in `data/redirects.json` and processed by the Next.js proxy on every request, before trailing-slash normalisation, so an old URL reaches its destination in one hop. Sources are regexes matched against the pathname without its trailing slash. The proxy skips paths with a dot, so a rule for a file path (`/sitemap_index.xml`, `/wp-content/uploads/…`) also needs that path in the `legacy file matchers` block of `proxy.ts`. Destinations support capture groups:
 
 ```json
 [
@@ -86,21 +119,22 @@ Site hierarchy is defined in `data/navigation.json` and supports nested children
 
 Global site settings live in `data/site.json` — name, description, URL, social links, and copyright text. These are used by the layout components and the metadata builder.
 
-`lib/metadata.ts` provides `buildMetadata(page?)` which merges site defaults with per-page overrides:
+`lib/metadata.ts` provides `buildMetadata(page?)`, which merges site defaults, the previous site's SEO for `path` (if any) and per-page overrides. Always pass `path`:
 
 ```ts
 // app/about/page.tsx
 import { buildMetadata } from "@/lib/metadata";
 
 export const metadata = buildMetadata({
-  title: "About",
+  path: "/about",
+  title: "About", // wrapped in site.json#titleTemplate
   description: "Learn more about us",
 });
 ```
 
 ## Third-Party Scripts
 
-Scripts are defined in `data/scripts.json` with URL pattern matching. Each script specifies regex patterns for which pages it should load on. An empty `urlPatterns` array loads the script on all pages.
+Scripts not covered by the analytics components are defined in `data/scripts.json` (empty by default) with URL pattern matching. Each script specifies regex patterns for which pages it should load on. An empty `urlPatterns` array loads the script on all pages.
 
 ```json
 [
