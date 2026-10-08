@@ -91,8 +91,9 @@ async function main(): Promise<void> {
   if (flag("json")) {
     console.log(JSON.stringify({ checked: pages.length, redirected, findings }, null, 2));
   } else {
-    const byField = Map.groupBy(findings, (finding) => finding.field);
-    for (const [field, group] of byField) {
+    const fields = [...new Set(findings.map((finding) => finding.field))];
+    for (const field of fields) {
+      const group = findings.filter((finding) => finding.field === field);
       console.log(`\n── ${field} (${group.length})`);
       for (const finding of group) {
         console.log(`   ${finding.path}\n      expected: ${finding.expected}\n      actual:   ${finding.actual}`);
