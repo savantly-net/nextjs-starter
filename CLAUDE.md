@@ -27,7 +27,7 @@ public/           # Static assets
 
 ### One Component Per File
 - Each React component MUST have its own file
-- File name matches component name: `Button.tsx` exports `Button`
+- File names are kebab-case and match the export: `user-profile.tsx` exports `UserProfile` (the shadcn/ui convention this repo already uses)
 - Co-locate component-specific types in the same file
 - Co-locate component-specific hooks only if used exclusively by that component
 
@@ -49,9 +49,9 @@ export function Button({ variant, children }: ButtonProps) {
 ```
 
 ### Naming Conventions
-- Components: PascalCase (`UserProfile.tsx`)
-- Hooks: camelCase with `use` prefix (`useAuth.ts`)
-- Utilities: camelCase (`formatDate.ts`)
+- Components: PascalCase export in a kebab-case file (`user-profile.tsx` → `UserProfile`)
+- Hooks: camelCase with `use` prefix (`useAuth`), kebab-case file (`use-auth.ts`)
+- Utilities: camelCase export, kebab-case file (`format-date.ts`)
 - Types: PascalCase (`User`, `ApiResponse`)
 
 ## 12-Factor App Principles
@@ -170,14 +170,38 @@ export function Button({ variant, children }: ButtonProps) {
 - Use `@/*` path alias for absolute imports
 - Group imports: external, internal, relative, styles
 
+## SEO Rules (not optional)
+
+Full contract: `docs/CONVERSION-CONTRACT.md`.
+
+- Every page exports `metadata = buildMetadata({ path: "/the/route/" })`, or a
+  `generateMetadata` that calls it with the instance's path. Never hand-build
+  `Metadata`: canonical and `og:url` come from `path`, and a page without it claims
+  to be the home page.
+- Unknown URLs 404. Dynamic routes export `dynamicParams = false`, list their params
+  in `generateStaticParams`, and call `notFound()` for unknown ones. No root
+  catch-all (`app/[...slug]`).
+- Internal links, `redirect()` targets and form actions follow
+  `data/site.json#trailingSlash`. Build paths with `href()` from `lib/site-url.ts`.
+- Old URLs that moved get a rule in `data/redirects.json`, never a stub page.
+- Pages add JSON-LD with `components/seo/`: `WebPageStructuredData` on pages,
+  `ArticleStructuredData` on blog posts. The site graph is already in the layout.
+- Don't add tracking scripts to pages. Analytics are env-gated components in the layout.
+- Don't change titles or descriptions in `data/legacy-seo.json` incidentally;
+  rankings depend on them.
+- Before calling a conversion done: `pnpm lint`, `pnpm test`, `pnpm build`, then
+  `check:url-parity` and `check:seo-parity` against a production build pass.
+
 ## Environment Variables
 
 ### Required
 ```
-# Example - document actual required vars here
-DATABASE_URL=
-NEXT_PUBLIC_API_URL=
+# The origin this deployment serves. Production MUST set it to data/site.json#url
+# at build time, or the live site ships noindex.
+NEXT_PUBLIC_SITE_URL=
 ```
+
+Analytics variables are in `.env.example`; each is optional.
 
 ### Conventions
 - `NEXT_PUBLIC_` prefix for client-accessible vars
